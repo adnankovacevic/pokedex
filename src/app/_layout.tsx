@@ -10,13 +10,6 @@ export default function RootLayout() {
       <ThemeProvider>
         <Stack>
           <Stack.Screen
-            name="index"
-            options={{
-              // headerShown:false,
-              title: "Pokadex",
-            }}
-          />
-          <Stack.Screen
             name="details/[name]"
             options={{
               // title: "Details",
