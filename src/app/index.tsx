@@ -10,6 +10,7 @@ export default function Index() {
   const router = useRouter();
 
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   const [nextUrl, setNextUrl] = useState<string | null>(`${POKEMON_LIST}?limit=20`);
 
   useEffect(() => {
@@ -22,10 +23,38 @@ export default function Index() {
     try {
       const response = await fetch(nextUrl);
       const data = await response.json();
-
       setNextUrl(data.next);
 
       const newPokemons: Pokemon[] = await Promise.all(
+        data.results.map(async (poke: { name: string; url: string; }) => {
+          const res = await fetch(poke.url);
+          const details = await res.json();
+          return {
+            name: poke.name,
+            url: poke.url,
+            image: details.sprites.front_default || null,
+          };
+        })
+      );
+
+      setPokemons(prev => [...prev, ...newPokemons]);
+    } catch (error) {
+      console.error(error);
+    }
+  }, [nextUrl]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+
+    setNextUrl(`${POKEMON_LIST}?limit=20`);
+    setPokemons([]);
+
+    try {
+      const response = await fetch(`${POKEMON_LIST}?limit=20`);
+      const data = await response.json();
+      setNextUrl(data.next);
+
+      const freshPokemons = await Promise.all(
         data.results.map(async (poke: { name: string; url: string }) => {
           const res = await fetch(poke.url);
           const details = await res.json();
@@ -37,21 +66,25 @@ export default function Index() {
         })
       );
 
-
-      setPokemons(prev => [...prev, ...newPokemons]);
-    } catch (error) {
-      console.error("Error fetching pokemons:", error);
+      setPokemons(freshPokemons);
+    } catch (e) {
+      console.log(e);
     }
-  }, [nextUrl]);
+
+    setRefreshing(false);
+  }, []);
+
 
   return (
     <FlatList
       data={pokemons}
-      keyExtractor={(item) => item.name}
+      keyExtractor={(item, index) => `${item.name}-${index}`}
       numColumns={2}
       contentContainerStyle={styles.gridContainer}
       onEndReached={loadMorePokemons}
       onEndReachedThreshold={0.5}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
       renderItem={({ item, index }) => (
         <PokemonCard
           name={item.name}
@@ -66,7 +99,7 @@ export default function Index() {
         />
       )}
     />
-  );
+  )
 }
 
 const styles = StyleSheet.create({

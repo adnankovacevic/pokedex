@@ -11,7 +11,7 @@ export default function PokemonCard({ name, image, onPress, color }: any) {
 
 const styles = StyleSheet.create({
     card: {
-        width: "50%",
+        width: "48%",
         height: 140,
         alignItems: "center",
         justifyContent: "center",
