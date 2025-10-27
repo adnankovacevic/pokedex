@@ -1,4 +1,5 @@
-import { POKEMON_DETAILS } from "@/src/constants/urls";
+import { usePokemonDetails } from "@/src/hooks/usePokemonDetails";
+import { useFavoritesStore } from "@/src/store/favorites.store";
 import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";
@@ -12,40 +13,27 @@ import {
     View,
 } from "react-native";
 
-const TABS = ["About", "Base Stats", "Evolutions", "Moves"] as const;
+const TABS = ["About", "Base Stats", "Moves"] as const;
 
 export default function Details() {
-    const { name, color } = useLocalSearchParams<{
-        name: string;
-        color?: string;
-    }>();
-    const [pokemon, setPokemon] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState<typeof TABS[number]>("About");
-    const [isFavorite, setIsFavorite] = useState(false);
-
     const navigation = useNavigation();
 
     useEffect(() => {
         navigation.setOptions({ headerShown: false });
     }, []);
 
-    useEffect(() => {
-        fetchDetails();
-    }, []);
+    const { name: routeName, color: routeColor } = useLocalSearchParams();
+    const { favorites, toggleFavorite } = useFavoritesStore();
 
-    async function fetchDetails() {
-        const response = await fetch(POKEMON_DETAILS(name!));
-        const data = await response.json();
-        setPokemon(data);
-    }
+    const pokemonName = Array.isArray(routeName) ? routeName[0] : routeName;
+    const pokemonColor = Array.isArray(routeColor) ? routeColor[0] : routeColor;
 
-    if (!pokemon) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" />
-            </View>
-        );
-    }
+    const { data: pokemon, isLoading } = usePokemonDetails(pokemonName!);
+
+    const [activeTab, setActiveTab] = useState<typeof TABS[number]>("About");
+    const isFavorite = favorites.includes(pokemonName!);
+
+    if (isLoading) return <ActivityIndicator />;
 
     return (
         <View style={styles.body}>
@@ -59,16 +47,12 @@ export default function Details() {
                     {pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)}
                 </Text>
 
-                <Pressable onPress={() => setIsFavorite(!isFavorite)}>
-                    <FontAwesome
-                        name={isFavorite ? "heart" : "heart-o"}
-                        size={24}
-                        color={isFavorite ? "#ff3562" : "#fff"}
-                    />
+                <Pressable onPress={() => toggleFavorite(pokemonName!)}>
+                    <FontAwesome name={isFavorite ? "heart" : "heart-o"} size={24} color={isFavorite ? "red" : "white"} />
                 </Pressable>
             </View>
 
-            <View style={[styles.header, { backgroundColor: color || "#CBC3E3" }]}>
+            <View style={[styles.header, { backgroundColor: pokemonColor || "#CBC3E3" }]}>
                 <Image
                     source={{ uri: pokemon.sprites.front_default }}
                     style={styles.image}
@@ -106,9 +90,9 @@ export default function Details() {
                             </Text>
                         ))}
 
-                    {activeTab === "Evolutions" && (
-                        <Text style={styles.text}>Coming soon… 🧬</Text>
-                    )}
+                    {/* {activeTab === "Evolutions" && (
+                        <Text style={styles.text}>Coming soon…</Text>
+                    )} */}
 
                     {activeTab === "Moves" &&
                         pokemon.moves.slice(0, 20).map((m: any, index: number) => (
@@ -118,7 +102,7 @@ export default function Details() {
                         ))}
                 </ScrollView>
             </View>
-        </View>
+        </View >
     );
 }
 
