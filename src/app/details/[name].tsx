@@ -1,4 +1,4 @@
-import { POKEMON_DETAILS } from "@/api/urls";
+import { POKEMON_DETAILS } from "@/src/constants/urls";
 import { FontAwesome } from "@expo/vector-icons";
 import { useLocalSearchParams, useNavigation } from "expo-router";
 import { useEffect, useState } from "react";

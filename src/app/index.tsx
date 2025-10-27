@@ -1,6 +1,6 @@
-import { POKEMON_LIST } from "@/api/urls";
-import PokemonCard from "@/components/PokemonCard";
-import { POKEMON_COLORS } from "@/constants/colors";
+import PokemonCard from "@/src/components/PokemonCard";
+import { POKEMON_COLORS } from "@/src/constants/colors";
+import { POKEMON_LIST } from "@/src/constants/urls";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
